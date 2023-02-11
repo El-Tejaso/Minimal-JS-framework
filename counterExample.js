@@ -1,32 +1,39 @@
-function createApp(mountPoint, ctx) {
-    const { counterContainer } = createComponent(
+function createCounterApp(mountPoint) {
+    const { counterContainer, btn } = createComponent(
         mountPoint,
-        `<h1>Counter App Epic Counter App</h1>
-        <div --id="counterContainer"></div>`
+        `<div --id="counterContainer"></div>
+        <button --id="btn">Add</button>`
     );
 
-    createCounter(counterContainer, ctx);
-    createCounter(counterContainer, ctx);
-}
+    const ctx = {
+        counterState: createState(0)
+    }
 
+    const [getCount, setCount, _] = ctx.counterState;
 
-function createCounter(mountPoint, ctx) {
-    const { text, btn } = createComponent(
-        mountPoint,
-        `<div --id="text"></div>
-        <button --id="btn">Add</button>`
-    )
-
-    const [getCount, setCount, onCountChange] = ctx.counterState;
-
-    onCountChange(text, (count) => text.textContent = count);
     btn.addEventListener("click", () => {
         setCount(getCount() + 1);
     })
+
+    setInterval(() => {
+        setCount(getCount() + 1);
+    }, 1000)
+
+    for(let i = 0; i < 40; i++) {
+        const { component:row } = createComponent(counterContainer, `<div></div>`);
+        for(let j = 0; j < 40; j++) {
+            createCounter(row, ctx);
+        }
+    }
 }
 
-const appCtx = {
-    counterState: createState(0)
-}
+function createCounter(mountPoint, ctx) {
+    const { text } = createComponent(
+        mountPoint,
+        `<span --id="text"></span>`
+    )
 
-createApp(document.getElementById("app"), appCtx)
+    const [_, __, onCountChange] = ctx.counterState;
+
+    onCountChange(text, (count) => text.textContent = count);
+}

@@ -1,64 +1,38 @@
-function renderList(mountPoint, wantedCount, renderFn, ...args) {
-    while (mountPoint.childNodes.length < wantedCount) {
-        renderFn(mountPoint, ...args);
-    }
-    
-    while (mountPoint.childNodes.length > wantedCount) {
-        mountPoint.removeChild(mountPoint.childNodes[mountPoint.childNodes.length - 1])
-    }
-}
-
-function renderKeyedList(mountPoint, listElements, newElementsBuffer, keyNodeMap, keyFn, renderFn, ...args) {
-    for(const data of keyNodeMap.values()) {
-        data.shouldDelete = true;
+function createColorListBenchmarkApp(mountPoint) {
+    const ctx = {
+        colors: createState(initialColors),
     }
 
-    newElementsBuffer.splice(0, newElementsBuffer.length);
-
-    for(const obj of listElements) {
-        const key = keyFn(obj);
-        if (!keyNodeMap.has(key)) {
-            const { component: newEl } = renderFn(mountPoint, obj, ...args);
-            keyNodeMap.set(key, {
-                el: newEl,
-                shouldDelete: false,
-            });
-        }
-        
-        const data = keyNodeMap.get(key);
-        data.shouldDelete = false;
-        newElementsBuffer.push(data.el);
-    }
-
-    for(const [key, data] of keyNodeMap.entries()) {
-        if (data.shouldDelete) {
-            keyNodeMap.delete(key);
-        }
-    }
-
-    mountPoint.replaceChildren();
-    mountPoint.replaceChildren(...newElementsBuffer);
-    newElementsBuffer.splice(0, newElementsBuffer.length);
-}
-
-function createColorList(mountPoint, ctx) {
     const [getColors, setColors, onColorsChange] = ctx.colors;
 
-    const { component, colorsList, shuffleBtn, sortBtn, infoText } = createComponent(
+    const { component, colorsList, shuffleBtn, sortBtn, infoText, startBtn } = createComponent(
         mountPoint,
         `<div>
-            <button --id="shuffleBtn">Shuffle</button>
-            <button --id="sortBtn">Sort</button>
+            <style scoped>
+                .color-box {
+                    font-size: 4px;
+                    color: #FFF;
+                    display:inline-block; 
+                    padding:2px;
+                }
+                .color-box-container {
+                    line-height: 0px;
+                }
+            </style>
             <div>
                 The following is a demo that shuffles a bunch of divs around inside another div.
                 5000 or so divs are initialized to some color, which never changes, but the order is always randomized, so 
                 a list rendering algorithm based on keys can be used.
-                It is surprisingly difficult to do this at 60FPS - 
-                if you know how to speed it up, you will be rich (seeing as this demo made by _me_ prompted you to figure it out, how about telling me how you dit it? eh? ol buddy ol pal?).
-                In the meantime, enjoy the loud spinning of your computer fan
+                It is surprisingly difficult to do this at 60FPS.
+                In the meantime, click the 'Start' button below, and enjoy the loud spinning of your computer fan
             </div>
-            <div --id="infoText"></div>
-            <div --id="colorsList"></div>
+            <div --id="colorsList" class="color-box-container"></div>
+            <div>
+            <button --id="shuffleBtn">Shuffle</button>
+            <button --id="sortBtn">Sort</button>
+            <button --id="startBtn"></button>
+            </div>
+            <div --id="infoText" style="font-family:monospace"></div>
         </div>`
     );
 
@@ -97,7 +71,7 @@ function createColorList(mountPoint, ctx) {
             keyNodeMap, 
             csRGB, 
             (mountPoint, color) => {
-                return createComponent(mountPoint, `<div style="background-color:rgb(${csRGB(color)});color: #FFF; display:inline-block; padding:10px;">${csRGB(color)}</div>`);
+                return createComponent(mountPoint, `<div class="color-box" style="background-color:rgb(${csRGB(color)});">${csRGB(color)}</div>`);
             }
         );
     })
@@ -123,11 +97,24 @@ function createColorList(mountPoint, ctx) {
         setColors(colors);
     })
 
+    let paused = true;
     const shuffleColorsAnimation = createAnimation((dt) => {
+        const fps = Math.floor(1/dt);
+        if (paused) {
+            infoText.textContent = `Doing nothing at ${fps} FPS`
+            return;
+        }
+        
         shuffleColors();
-        infoText.textContent = `Shuffling ${colorsList.childNodes.length} colors at ${1/dt} FPS`
+        infoText.textContent = `Shuffling ${colorsList.childNodes.length} colors at ${fps} FPS`
     })
     shuffleColorsAnimation();
+
+    startBtn.addEventListener("click", () => {
+        paused = !paused;
+        startBtn.textContent = paused ? "Start" : "Stop";
+    })
+    startBtn.textContent = paused ? "Start" : "Stop";
 
     return component;
 }
@@ -152,9 +139,3 @@ let initialColors = [];
         }
     }
 })();
-
-const ctx = {
-    colors: createState(initialColors),
-}
-
-createColorList(document.getElementById("app"), ctx)

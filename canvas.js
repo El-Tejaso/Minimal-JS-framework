@@ -13,7 +13,7 @@ function createFillScreen(mountPoint) {
     return component;
 }
 
-function createApp(mountPoint) {
+function createPhysicsSimApp(mountPoint) {
     // program constants
     const MAX_RADIUS = 30;
     const MAX_SPEED = 400;
@@ -25,7 +25,7 @@ function createApp(mountPoint) {
 
     // program state
     const screen = {
-        width: 100, height:100
+        width:500, height:500
     }
     const balls = [];
     const makeBall = (ball = {size : 10, velX: 0, velY: 0, posX: 0, posY: 0}) => ({
@@ -72,8 +72,12 @@ function createApp(mountPoint) {
         }
     }
 
+    let paused = false;
+
     /** @param { CanvasRenderingContext2D } ctx */
     function draw(ctx, dt) {
+        if (paused) return;
+
         // alpha less that 1.0 creates a motion blur effect
         const alpha = 10 / 255;
         ctx.fillStyle = `rgb(255,255,255, ${alpha})`;
@@ -94,6 +98,8 @@ function createApp(mountPoint) {
     }
 
     function update(dt) {
+        if (paused) return;
+        
         // collide balls with each other
         for(const ball1 of balls) {
             for(const ball2 of balls) {
@@ -193,23 +199,22 @@ function createApp(mountPoint) {
         // console.log("total: ", totalMomentum);
     }
 
-    const { component:canvas } = createComponent(
+    const { component, canvas } = createComponent(
         mountPoint,
-        `<canvas --id="canvas">`
+        `<div style="position:absolute;top:0;left:0;right:0;bottom:0;">
+            <canvas --id="canvas">
+        </div>`
     );
 
     /** @type { CanvasRenderingContext2D } */
     const ctx = canvas.getContext('2d');
 
-
-    const maintainSize = () => {
-        screen.width = window.innerWidth;
-        screen.height = window.innerHeight
-        canvas.width = screen.width;
-        canvas.height = screen.height;
-    }
-    window.addEventListener("resize", maintainSize)
-    maintainSize();
+    onResize(component, (width, height) => {
+        screen.width = width;
+        screen.height = height;
+        canvas.width = width;
+        canvas.height = height;
+    });
 
     let timeLeftToProcess = 0;
     const startRenderLoop = createAnimation((dt) => {
@@ -232,15 +237,10 @@ function createApp(mountPoint) {
     init();
     startRenderLoop();
 
+    canvas.addEventListener("click", () => paused = !paused);
+
     return canvas;
 }
-
-createApp(
-    createFillScreen(
-        document.getElementById("app")
-    )
-);
-
 
 // helpers
 function mag(x,y) { return Math.sqrt(x * x + y * y); }

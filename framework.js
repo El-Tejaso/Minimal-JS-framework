@@ -1,24 +1,28 @@
 // ---- helpers
-function remove(arr, obj) {
+const remove = (arr, obj) => {
     const index = arr.indexOf(obj);
     if (index === -1) return null;
 
     arr.splice(index, 1);
     return obj;
 }
-function array(len) { return [...Array(len)].map((x, i) => i); }
-function assert(trueVal, msg) { if (!trueVal) { throw new Error(msg); } }
+const array = (len) => { return [...Array(len)].map((x, i) => i); }
+const assert = (trueVal, msg) => { if (!trueVal) { throw new Error(msg); } }
 
 // ---- framework
 const TEMP_DIV = document.createElement("div");
 
-function createComponent(mountPoint, html) {
+const createComponent = (mountPoint, html) => {
     const createDiv = document.createElement("div");
     createDiv.innerHTML = html;
 
     const selectedNodes = {};
     createDiv.querySelectorAll("[--id]")
-        .forEach(sel => selectedNodes[sel.getAttribute("--id")] = sel);
+        .forEach(sel => {
+            const name = sel.getAttribute("--id");
+            selectedNodes[name] = sel;
+            sel.removeAttribute("--id");
+        });
     
     selectedNodes["component"] = createDiv.children[0];
 
@@ -27,12 +31,22 @@ function createComponent(mountPoint, html) {
     return selectedNodes;
 }
 
-
-function createState(initialState) {
+const createState = (initialState) => {
     let state = initialState, invokingEvent = false;
     const handlers = [];
-
+    
     const get = () => state;
+    
+    // Remove events for dom nodes that have disconnected themselves.
+    // I wasn't able to find a good way to observe a component and disconnect it via an event,
+    // so I am doing it like this.
+    const cleanHandlers = () => {
+        for(let i = handlers.length - 1; i >= 0; i--) {
+            if (!handlers[i][0].isConnected) {
+                handlers.splice(i, 1);
+            }
+        }
+    }
 
     const set = (val) => {
         if (invokingEvent) {
@@ -44,13 +58,8 @@ function createState(initialState) {
 
         invokingEvent = true;
         try {
-            // remove events for dom nodes that have disconnected themselves
+            cleanHandlers();
             for(let i = handlers.length - 1; i >= 0; i--) {
-                if (!handlers[i][0].isConnected) {
-                    handlers.splice(i, 1);
-                    continue;
-                }
-
                 handlers[i][1](state);
             }
         } finally {
@@ -61,6 +70,10 @@ function createState(initialState) {
     // if several dom nodes get unsubscribed but this event is never invoked later, then we have leaked memory
     const subscribe = (domNode, callback) => {
         assert(domNode instanceof Element, "events must be subscribed to dom elements, so they can be automatically unsubscribed");
+
+        // Avoid the case where UI elements are constantly created and destroyed, and 
+        // they keep subscribing to an event that is never fired and therefore never cleaned.
+        cleanHandlers();
 
         handlers.push([domNode, callback]);
         invokingEvent = true;
@@ -74,7 +87,7 @@ function createState(initialState) {
     return [get, set, subscribe];
 }
 
-function createAnimation(animateFunc) {
+const createAnimation = (animateFunc) => {
     let t0, started = false;
 
     const animate = (t) => {
@@ -104,4 +117,62 @@ function createAnimation(animateFunc) {
     }
 
     return startAnimation;
+}
+
+const renderList = (mountPoint, wantedCount, renderFn, ...args) => {
+    while (mountPoint.childNodes.length < wantedCount) {
+        renderFn(mountPoint, ...args);
+    }
+    
+    while (mountPoint.childNodes.length > wantedCount) {
+        mountPoint.removeChild(mountPoint.childNodes[mountPoint.childNodes.length - 1])
+    }
+}
+
+const renderKeyedList = (mountPoint, listElements, newElementsBuffer, keyNodeMap, keyFn, renderFn, ...args) => {
+    for(const data of keyNodeMap.values()) {
+        data.shouldDelete = true;
+    }
+
+    newElementsBuffer.splice(0, newElementsBuffer.length);
+
+    for(const obj of listElements) {
+        const key = keyFn(obj);
+        if (!keyNodeMap.has(key)) {
+            const { component: newEl } = renderFn(mountPoint, obj, ...args);
+            keyNodeMap.set(key, {
+                el: newEl,
+                shouldDelete: false,
+            });
+        }
+        
+        const data = keyNodeMap.get(key);
+        data.shouldDelete = false;
+        newElementsBuffer.push(data.el);
+    }
+
+    for(const [key, data] of keyNodeMap.entries()) {
+        if (data.shouldDelete) {
+            keyNodeMap.delete(key);
+        }
+    }
+
+    mountPoint.replaceChildren();
+    mountPoint.replaceChildren(...newElementsBuffer);
+    newElementsBuffer.splice(0, newElementsBuffer.length);
+}
+
+const onResize = (domNode, callback) => {
+    const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+            if (entry.borderBoxSize) {
+                callback(entry.borderBoxSize[0].inlineSize, entry.borderBoxSize[0].blockSize);
+            } else {
+                callback(entry.contentRect.width, entry.contentRect.height);
+            }
+        }
+    });
+    resizeObserver.observe(domNode);
+
+    return () => resizeObserver.disconnect();
 }
