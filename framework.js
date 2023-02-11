@@ -8,6 +8,7 @@ const remove = (arr, obj) => {
 }
 const assert = (trueVal, msg) => { if (!trueVal) { throw new Error(msg); } }
 
+/** @returns {Object<string, Element>} */
 const createComponent = (mountPoint, html) => {
     const createDiv = document.createElement("div");
     createDiv.innerHTML = html.trim();
@@ -97,7 +98,6 @@ const createAnimation = (animateFunc) => {
     
             if (animateFunc(deltaTimeSeconds)) {
                 started = false;
-                console.log("||| Stopped animation");
                 return;
             }
         }
@@ -109,7 +109,6 @@ const createAnimation = (animateFunc) => {
         if (started) return;
         started = true;
         t0 = null;
-        console.log(">>> Started animation");
 
         window.requestAnimationFrame(animate);
     }
