@@ -13,17 +13,15 @@ function createFillScreen(mountPoint) {
     return component;
 }
 
-
-
 function createApp(mountPoint) {
     // program constants
     const MAX_RADIUS = 30;
     const MAX_SPEED = 400;
-    const NUM_BALLS = 200;
+    const NUM_BALLS = 100;
     const FIXED_DT = 1 / 240000;
-    const DAMPING = 0.0;
-    const GRAVITY = 3000;
+    const GRAVITY = 50;
     const GRAVITY_HORIZON = 100;
+    const BOUNCINESS = 1.0;
 
     // program state
     const screen = {
@@ -35,8 +33,9 @@ function createApp(mountPoint) {
         dvX : 0,
         dvY : 0,
         mass: function() { 
-            ///return sphereVolume(this.size); 
-            return this.size;
+            return sphereVolume(this.size); 
+            // return this.size;
+            // return Math.pow(this.size, 5);
         }
     });
 
@@ -75,8 +74,8 @@ function createApp(mountPoint) {
 
     /** @param { CanvasRenderingContext2D } ctx */
     function draw(ctx, dt) {
-        // alpha less that 1 creates a motion blur effect
-        const alpha = 2 / 255;
+        // alpha less that 1.0 creates a motion blur effect
+        const alpha = 10 / 255;
         ctx.fillStyle = `rgb(255,255,255, ${alpha})`;
         ctx.fillRect(0, 0, screen.width, screen.height);
 
@@ -133,8 +132,8 @@ function createApp(mountPoint) {
                 // massRatio = massRatio * massRatio;
                 // const massRatio = 1;
 
-                ball1.dvX += (-2 * vInNormal * normalXNormalized) * massRatio * (1 - DAMPING);
-                ball1.dvY += (-2 * vInNormal * normalYNormalized) * massRatio * (1 - DAMPING);
+                ball1.dvX += (-2 * vInNormal * normalXNormalized) * massRatio * BOUNCINESS;
+                ball1.dvY += (-2 * vInNormal * normalYNormalized) * massRatio * BOUNCINESS;
             }
         }
 
@@ -150,7 +149,8 @@ function createApp(mountPoint) {
                 if (r < max(0 , ball1.size + ball2.size - GRAVITY_HORIZON)) continue;
 
 
-                const forceAmount = GRAVITY * (ball1.mass() * ball2.mass())  / (r * r);
+                // const forceAmount = GRAVITY * (ball1.mass() * ball2.mass())  / (r * r); // doesn't look as cool
+                const forceAmount = GRAVITY * (ball1.mass() * ball2.mass())  / (r);
                 const forceDirX = b1ToB2X / r;
                 const forceDirY = b1ToB2Y / r;
 
