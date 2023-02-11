@@ -1,5 +1,5 @@
 function createDemoExplorerApp(mountPoint) {
-    const { appList, exposition, exposition2, topTitle } = createComponent(
+    const { appList, exposition, topTitle } = createComponent(
         mountPoint,
         `<div style="padding:10px;" class="explorer-app">
 <style scoped>
@@ -47,28 +47,65 @@ function createDemoExplorerApp(mountPoint) {
                 <div --id="exposition"></div>
             </div>
             <div class="section">
-                <div --id="exposition2"></div>
                 <div --id="appList"></div>
             </div>
         </div>`
     );
 
-    exposition.innerText = `Lately, I have been hacking away on random things using HTML and Javascript. As fun as it is, there comes a point where I can't really add more functionality to the program. This is usually because all of my state is global, and all my code is contained within a single <script></script> block. Frameworks like React and Solid allow programmers to separate their program into several re-useable components, and also provide primitives for reactivity, which can make app development much simpler. However, you would need to install NodeJS, onto your computer if you wanted to use those frameworks, since they rely on bundlers and other stuff to convert the JSX into normal javascript that can be run on a browser. All of these levels of indirection that frameworks add can also make debugging certain bugs a nightmare.
-    
-    This 'framework' is not really a framework, but more like a couple of helper functions and a pattern that can make writing apps in vanilla-JS just as scaleable as any of those frameworks, without the need for build steps or any complicated setups.s`;
+    exposition.innerText = `Lately, I have been hacking away on random things using HTML and Javascript. As fun as it is, there comes a point where I can't really add more functionality to the program. This is usually because all of my state is global, and all my code is contained within a single <script></script> block in a single html file. Frameworks like React allow programmers to separate their program into several re-useable components, and also provide primitives for 'reactivity', which can make app development much simpler. However, you would need to install NodeJS, and set up some kind of bundler to convert the JSX into normal javascript that can be run on a browser.
 
-    exposition2.innerText = `Even though I believe that this framework can be used to make scaleable single page apps to the same extent as something like React, I would need to actually make some things in order to know for sure. The following are some examples of what can be done, though I intend to make some more complicated things in the near future.`
+    Recently I was using a computer where I couldn't really install new software, so I wondered if it was possible to quickly cobble together some sort of 'framework' to get a similar DX to React, or at least have the ability to componentize and scale my UI code in a similar way, and it looks like this is in fact doable.
+    
+    This 'framework' is not really a framework, but more like a couple of helper functions that can make writing apps in vanilla-JS just as scaleable as any of those frameworks, without the need for additional development software.
+    
+    Even though I believe that this framework can be used to make scaleable single page apps to the same extent as something like React, I would need to actually make some things in order to know for sure. The following are some examples of what can be done, though I intend to make some more complicated things in the near future.
+    `;
 
     let h = 0;
     const animateTitle = createAnimation((dt) => {
         h = (h + dt * 100) % 240;
 
-        topTitle.style.color = `hsl(${h}, 100%, 50%)`;
+        topTitle.style.color = `hsl(${h}, 100%, 75%)`;
     })
     animateTitle();
 
-    const { component: physicsSimContainer } = createComponent(appList, "<div style=\"position: relative; height:400px;\"></div>");
+
+    const { physicsSimContainer, handle } = createComponent(
+        appList, 
+        `<style scoped>
+            .handle {
+                height: 10px;
+                background-color: blue;
+                opacity: 0.3;
+                cursor: row-resize;
+            }
+            .handle:hover {
+                opacity: 1;
+            }
+        </style>
+        <h1>Responsive scaling, and animations</h1>
+        <div>
+            Drag the blue handle thing below this, or resize the window to adjust the boundaries of the strange-cool-looking physics sim.
+            This is what atoms actually look like. No, really
+        </div>
+        <div --id="physicsSimContainer" style=\"position: relative; height:400px;\"></div>
+        <div --id="handle" class="handle"></div>
+        `
+    );
+    let startHeight;
+    onDrag(handle, {
+        onDragStart: () => startHeight = physicsSimContainer.getBoundingClientRect().height,
+        onDrag: (_, dy) => {
+            physicsSimContainer.style.height = startHeight + dy + "px";
+            console.log(dy)
+        }
+    })
     createPhysicsSimApp(physicsSimContainer);
+
+    createComponent(
+        appList,
+        `<h1>Keyed list rendering</h1>`
+    )
     createColorListBenchmarkApp(appList);
     createCounterApp(appList);
 }

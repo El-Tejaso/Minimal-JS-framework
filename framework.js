@@ -6,15 +6,11 @@ const remove = (arr, obj) => {
     arr.splice(index, 1);
     return obj;
 }
-const array = (len) => { return [...Array(len)].map((x, i) => i); }
 const assert = (trueVal, msg) => { if (!trueVal) { throw new Error(msg); } }
-
-// ---- framework
-const TEMP_DIV = document.createElement("div");
 
 const createComponent = (mountPoint, html) => {
     const createDiv = document.createElement("div");
-    createDiv.innerHTML = html;
+    createDiv.innerHTML = html.trim();
 
     const selectedNodes = {};
     createDiv.querySelectorAll("[--id]")
@@ -24,9 +20,11 @@ const createComponent = (mountPoint, html) => {
             sel.removeAttribute("--id");
         });
     
-    selectedNodes["component"] = createDiv.children[0];
+    selectedNodes["component"] = createDiv.childNodes[0];
 
-    createDiv.childNodes.forEach(c => mountPoint.appendChild(c))
+    for(const c of createDiv.childNodes) {
+        mountPoint.appendChild(c);
+    }
     
     return selectedNodes;
 }
@@ -175,4 +173,39 @@ const onResize = (domNode, callback) => {
     resizeObserver.observe(domNode);
 
     return () => resizeObserver.disconnect();
+}
+
+// An oldie but goodie: https://www.w3schools.com/howto/howto_js_draggable.asp
+// I changed it a bit, but it is mostly the same
+const onDrag = (domNode, { onDragStart, onDrag, onDragEnd }) => {
+    let startX, startY, deltaX, deltaY;
+
+    domNode.addEventListener("mousedown", dragMouseDown);
+  
+    function dragMouseDown(e) {
+      e = e || window.event;
+      e.preventDefault();
+
+      startX = e.pageX;
+      startY = e.pageY;
+      onDragStart && onDragStart(startX, startY);
+
+      document.addEventListener("mouseup", closeDragElement);
+      document.addEventListener("mousemove", elementDrag);
+    }
+  
+    function elementDrag(e) {
+      e = e || window.event;
+      e.preventDefault();
+
+      deltaX = e.pageX - startX;
+      deltaY = e.pageY - startY;
+      onDrag && onDrag(deltaX,  deltaY);
+    }
+  
+    function closeDragElement() {
+      document.removeEventListener("mouseup", dragMouseDown);
+      document.removeEventListener("mousemove", elementDrag);
+      onDragEnd && onDragEnd(deltaX, deltaY);
+    }
 }
