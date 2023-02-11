@@ -52,14 +52,11 @@ function createDemoExplorerApp(mountPoint) {
         </div>`
     );
 
-    exposition.innerText = `Lately, I have been hacking away on random things using HTML and Javascript. As fun as it is, there comes a point where I can't really add more functionality to the program. This is usually because all of my state is global, and all my code is contained within a single <script></script> block in a single html file. Frameworks like React allow programmers to separate their program into several re-useable components, and also provide primitives for 'reactivity', which can make app development much simpler. However, you would need to install NodeJS, and set up some kind of bundler to convert the JSX into normal javascript that can be run on a browser.
+    exposition.innerText = `Lately, I have been hacking away on random things using HTML and Javascript. As fun as it is, there comes a point where adding more functionality to the program becomes unwieldy. This is usually because all of my state is global, and all my code is contained within a single <script></script> block in the index.html file. A framework like React would allow for several components encapsulating UI + Logic that can be reused, which is exactly what I want. However, I would need to install NodeJS, and set up some kind of bundler to convert the JSX into normal javascript that can be run on a browser.
 
-    Recently I was using a computer where I couldn't really install new software, so I wondered if it was possible to quickly cobble together some sort of 'framework' to get a similar DX to React, or at least have the ability to componentize and scale my UI code in a similar way, and it looks like this is in fact doable.
+    Recently I was using a computer where I couldn't really install new software, so I tried quickly cobbling together some sort of 'framework' to get a similar DX to React, or at least have the ability to componentize and scale my UI code in a similar way.
     
-    This 'framework' is not really a framework, but more like a couple of helper functions that can make writing apps in vanilla-JS just as scaleable as any of those frameworks, without the need for additional development software.
-    
-    Even though I believe that this framework can be used to make scaleable single page apps to the same extent as something like React, I would need to actually make some things in order to know for sure. The following are some examples of what can be done, though I intend to make some more complicated things in the near future.
-    `;
+    My first attempt at this was similar to this, but was quite bad. I was wrapping dom nodes in another class, and maintaining my own tree structure separate to the DOM itself. This ended up being a lot of code, and had quite a few bugs. I figured I could do better, so I tried again. Now, this 'framework' is actually just a couple of helper functions that cover most of the things I might struggle to do normally. These are things like instantiating HTML and selecting specific nodes, or implementing dragging logic, or key based list rendering.`;
 
     let h = 0;
     const animateTitle = createAnimation((dt) => {

@@ -10,7 +10,7 @@ const ctx = {
 function createCounterApp(mountPoint) {
     const { counterContainer, btn, progressBar, progressHead, progressContainer } = createComponent(
         mountPoint,
-        `<h1>Counter App Epic Counter App</h1>
+        `<h1>Event primitive</h1>
         <style scoped>
             // .progress-inner, .progress-remaining {
             //     height: 20px;
