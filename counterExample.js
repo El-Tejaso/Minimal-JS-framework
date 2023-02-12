@@ -42,10 +42,7 @@ function createCounterApp(mountPoint) {
                 background-color: yellow;
             }
         </style>
-        <div>When you extract the local state into global state - model view controller moment 😋😋😋
-        
-        Yeah idk about this one
-        </div>
+        <div>Drag the progress bar. Or click 'add'</div>
         <div --id="progressContainer" class="progress-container">
             <div --id="progressBar" class="progress-inner"></div>
             <div --id="progressHead" class="progress-head"></div>

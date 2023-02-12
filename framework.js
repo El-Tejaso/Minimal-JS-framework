@@ -30,12 +30,9 @@ const createComponent = (mountPoint, html) => {
     return selectedNodes;
 }
 
-const createState = (initialState) => {
-    let state = initialState, invokingEvent = false;
+const createEvent = () => {
     const handlers = [];
-    
-    const get = () => state;
-    
+
     // Remove events for dom nodes that have disconnected themselves.
     // I wasn't able to find a good way to observe a component and disconnect it via an event,
     // so I am doing it like this.
@@ -47,19 +44,16 @@ const createState = (initialState) => {
         }
     }
 
-    const set = (val) => {
+    const invoke = (...args) => {
         if (invokingEvent) {
-            // prevent infinite loops.
             return;
         }
-
-        state = val;
 
         invokingEvent = true;
         try {
             cleanHandlers();
             for(let i = handlers.length - 1; i >= 0; i--) {
-                handlers[i][1](state);
+                handlers[i][1](...args);
             }
         } finally {
             invokingEvent = false;
@@ -67,7 +61,7 @@ const createState = (initialState) => {
     }
 
     // if several dom nodes get unsubscribed but this event is never invoked later, then we have leaked memory
-    const subscribe = (domNode, callback) => {
+    const subscribe = (domNode, callback, ...args) => {
         assert(domNode instanceof Element, "events must be subscribed to dom elements, so they can be automatically unsubscribed");
 
         // Avoid the case where UI elements are constantly created and destroyed, and 
@@ -77,13 +71,37 @@ const createState = (initialState) => {
         handlers.push([domNode, callback]);
         invokingEvent = true;
         try {
-            callback(state);
+            callback(...args);
         } finally {
             invokingEvent = false;
         }
     }
 
-    return [get, set, subscribe];
+    return [subscribe, invoke];
+}
+
+const createState = (initialState) => {
+    let state = initialState, invokingEvent = false;
+
+    const [subscribe, invoke] = createEvent();
+
+    const get = () => state;
+
+    const set = (val) => {
+        if (invokingEvent) {
+            // prevent infinite loops.
+            return;
+        }
+
+        state = val;
+        invoke(state);
+    }
+
+    const subscribeWrapper = (domNode, callback) => {
+        subscribe(domNode, callback, state)
+    }
+
+    return [ get, set, subscribeWrapper ];
 }
 
 const createAnimation = (animateFunc) => {
