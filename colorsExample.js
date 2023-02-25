@@ -5,7 +5,7 @@ function createColorListBenchmarkApp(mountPoint) {
 
     const [getColors, setColors, onColorsChange] = ctx.colors;
 
-    const { component, colorsList, shuffleBtn, sortBtn, infoText, startBtn } = createComponent(
+    const { root, colorsList, shuffleBtn, sortBtn, infoText, startBtn } = createComponent(
         mountPoint,
         `<div>
             <style scoped>
@@ -43,7 +43,7 @@ function createColorListBenchmarkApp(mountPoint) {
     const keyNodeMap = new Map();
     const newElementsBuffer = [];
 
-    onColorsChange(component, (colors) => {
+    onColorsChange(root, (colors) => {
         // This is really fast actually.
         // colorsList.innerHTML = colors.map(color => {
         //     return `<div style="background-color:rgb(${csRGB(color)});color: #FFF; display:inline-block; padding:10px;">
@@ -123,7 +123,7 @@ function createColorListBenchmarkApp(mountPoint) {
     startBtn.addEventListener("click", startStop);
     startBtn.textContent = paused ? "Start" : "Stop";
 
-    return component;
+    return root;
 }
 
 function min(a, b) {

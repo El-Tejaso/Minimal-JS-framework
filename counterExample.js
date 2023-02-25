@@ -77,7 +77,7 @@ function createCounterApp(mountPoint) {
     }, 1000)
 
     for(let i = 0; i < 60; i++) {
-        const { component:row } = createComponent(counterContainer, `<div></div>`);
+        const { root:row } = createComponent(counterContainer, `<div></div>`);
         for(let j = 0; j < 40; j++) {
             createCounter(row, ctx);
         }

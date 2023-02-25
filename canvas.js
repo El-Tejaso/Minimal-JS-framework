@@ -1,5 +1,5 @@
 function createFillScreen(mountPoint) {
-    const { component } = createComponent(
+    const { root } = createComponent(
         mountPoint,
         `<div class="fill-screen">
             <style scoped>
@@ -10,7 +10,7 @@ function createFillScreen(mountPoint) {
         </div>`
     );
 
-    return component;
+    return root;
 }
 
 function createPhysicsSimApp(mountPoint) {
@@ -201,7 +201,7 @@ function createPhysicsSimApp(mountPoint) {
         // console.log("total: ", totalMomentum);
     }
 
-    const { component, canvas } = createComponent(
+    const { root, canvas } = createComponent(
         mountPoint,
         `<div style="position:absolute;top:0;left:0;right:0;bottom:0;line-height: 0;">
             <canvas --id="canvas"></canvas>
@@ -211,7 +211,7 @@ function createPhysicsSimApp(mountPoint) {
     /** @type { CanvasRenderingContext2D } */
     const ctx = canvas.getContext("2d");
 
-    onResize(component, (width, height) => {
+    onResize(root, (width, height) => {
         screen.width = width;
         screen.height = height;
         canvas.width = width;
