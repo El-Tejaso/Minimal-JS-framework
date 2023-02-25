@@ -26,8 +26,10 @@ const createComponent = (mountPoint, html) => {
 
     selectedNodes["root"] = createDiv.childNodes[0];
 
-    for (const c of createDiv.childNodes) {
-        mountPoint.appendChild(c);
+    if (mountPoint) {
+        for (const c of createDiv.childNodes) {
+            mountPoint.appendChild(c);
+        }
     }
 
     return selectedNodes;
@@ -170,7 +172,7 @@ const renderKeyedList = (
     for (const obj of listElements) {
         const key = keyFn(obj);
         if (!keyNodeMap.has(key)) {
-            const { root: newEl } = renderFn(mountPoint, obj, ...args);
+            const { root: newEl } = renderFn(null, obj, ...args);
             keyNodeMap.set(key, {
                 el: newEl,
                 shouldDelete: false
@@ -183,15 +185,15 @@ const renderKeyedList = (
     }
 
     for (const [key, data] of keyNodeMap.entries()) {
-        // TODO: delete from the document. I don't think we are doing this here
         if (data.shouldDelete) {
             keyNodeMap.delete(key);
         }
     }
 
+    // not redundant. It dismounts all children at once, so that when we call this again,
+    // we aren't constantly dismounts and moving children
     mountPoint.replaceChildren();
     mountPoint.replaceChildren(...newElementsBuffer);
-    newElementsBuffer.splice(0, newElementsBuffer.length);
 };
 
 const onResize = (domNode, callback) => {
